@@ -60,7 +60,7 @@ function nxt(){const cr=S.cr[S.d],i=S.pos,c=cr[i];let n=-1;
  if(n<0){S.phase='dom';sv();return draw();}
  S.pos=n;item();}
 function nd(){keepNt();if(S.d>=D.length-1){S.phase='end';S.ended=true;sv();return draw();}S.d++;S.pos=0;item();}
-function code(){const o={v:1,c:S.code,n:S.name||'',t:S.type,ts:Date.now(),d:D.map((_,i)=>[S.cr[i],S.rf[i],(S.cl||[])[i]||0,(S.nt||[])[i]||'']),q:Object.entries(S.rec).map(([n,v])=>[+n,v[0],v[1],v[2]||0])};
+function code(lt){const o={v:1,c:S.code,n:S.name||'',t:S.type,ts:Date.now(),d:D.map((_,i)=>[S.cr[i],lt?'':S.rf[i],(S.cl||[])[i]||0,lt?'':((S.nt||[])[i]||'')]),q:Object.entries(S.rec).map(([n,v])=>[+n,v[0],v[1],v[2]||0])};
  return 'HSH1:'+btoa(unescape(encodeURIComponent(JSON.stringify(o))));}
 function cp(){const t=code();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).catch(()=>{const a=$('#cd');a.select();document.execCommand('copy')}).then(()=>{$('#cpm').textContent='Хуулсан ✓'})}
 function sh(){const t=code();if(navigator.share)navigator.share({title:'ХШҮ тестийн үр дүн',text:t}).catch(cp);else cp();}
@@ -78,11 +78,13 @@ function sRev(){const v=S.rv,q=Q.find(x=>x.n===v.l[v.i]);let b=`<p class="mut">�
 function ST(){if(!ENDPOINT)return '';const t=S.sent;
  if(t==='ok')return '<div class="card good"><b>✔ Үр дүн багшид автоматаар илгээгдлээ.</b> Өөр юу ч хийх шаардлагагүй.</div>';
  if(t==='sent2')return '<div class="card bad"><b>Илгээсэн ч серверээс баталгаа авч чадсангүй.</b> Доорх кодыг багшид мөн илгээнэ үү.<br><button class="p" onclick="S.sent=0;send()">Дахин илгээх</button></div>';
- if(t==='unsure'||t==='fail')return '<div class="card bad"><b>Үр дүн сервер дээр бүртгэгдсэнгүй.</b> Интернэтээ шалгаад дахин илгээнэ үү, мөн доорх кодыг багшид нэмж илгээнэ үү.<br><button class="p" onclick="S.sent=0;send()">Дахин илгээх</button></div>';
+ if(t==='unsure'||t==='fail')return '<div class="card bad"><b>Үр дүн сервер дээр бүртгэгдсэнгүй.</b> Интернэтээ шалгаад дахин илгээнэ үү, мөн доорх кодыг багшид нэмж илгээнэ үү.'+(S.err?'<br><span class="mut">Алдаа: '+esc(S.err)+'</span>':'')+'<br><button class="p" onclick="S.sent=0;send()">Дахин илгээх</button></div>';
  return '<div class="card"><b>Багшид илгээж, баталгаажуулж байна…</b></div>';}
-function send(){if(!ENDPOINT||!S)return;S.sent='sending';sv();draw(false);const body=code(),id=S.code+'_'+S.type;
+function send(){if(!ENDPOINT||!S)return;S.sent='sending';S.err='';sv();draw(false);const id=S.code+'_'+S.type;
  const fin=v=>{S.sent=v;sv();if(S&&S.phase==='end')draw(false)};
- fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body}).then(r=>r.json()).then(j=>fin(j&&j.ok?'ok':'fail')).catch(()=>fetch(ENDPOINT,{method:'POST',mode:'no-cors',body}).then(()=>vf(id,0,fin)).catch(()=>fin('fail')));}
+ let c=code();if(encodeURIComponent(c).length>6000)c=code(1);
+ jp(ENDPOINT+'?save='+encodeURIComponent(c)).then(r=>{if(r&&r.ok)fin('ok');else{S.err=(r&&r.error)||'';fin('fail')}}).catch(()=>post2(code(),id,fin));}
+function post2(body,id,fin){fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body}).then(r=>r.json()).then(j=>fin(j&&j.ok?'ok':'fail')).catch(()=>fetch(ENDPOINT,{method:'POST',mode:'no-cors',body}).then(()=>vf(id,0,fin)).catch(()=>fin('fail')));}
 function vf(id,i,fin){if(i>=VD.length)return fin('fail');setTimeout(()=>jp(ENDPOINT+'?check='+encodeURIComponent(id)).then(r=>{if(r&&r.exists)fin('ok');else vf(id,i+1,fin)}).catch(()=>fin('sent2')),VD[i]);}
 function jp(u){return new Promise((res,rej)=>{const n='cb'+Date.now(),sc=document.createElement('script');window[n]=d=>{delete window[n];sc.remove();res(d)};sc.onerror=()=>{delete window[n];sc.remove();rej(new Error('jp'))};sc.src=u+'&callback='+n;document.head.appendChild(sc);setTimeout(()=>rej(new Error('timeout')),15000)})}
 async function pull(){if(!ENDPOINT){alert('Автомат цуглуулалт тохируулаагүй байна.');return;}const k=localStorage.getItem('hshu_pin')||prompt('Багшийн нууц үг (Apps Script дахь KEY):');if(!k)return;
